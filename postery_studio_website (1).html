@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>postery_studio | Custom Posters & Prints</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#121212',
+                            red: '#e63946',
+                            redHover: '#d62828',
+                            grayBg: '#f8f9fa',
+                            cardBg: '#ffffff',
+                            accent: '#1d3557'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Segoe UI', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #121212;
+        }
+        .poster-card {
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+        }
+        .poster-card:hover {
+            transform: translateY(-6px);
+        }
+        .poster-img-container {
+            overflow: hidden;
+            position: relative;
+        }
+        .poster-img-container img {
+            transition: transform 0.4s ease;
+        }
+        .poster-card:hover .poster-img-container img {
+            transform: scale(1.06);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+
+    <!-- Toast Notification Box -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 ease-in-out bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center space-x-3 border border-slate-700 max-w-md">
+        <i id="toast-icon" class="fas fa-check-circle text-emerald-400 text-lg"></i>
+        <span id="toast-message" class="text-sm font-medium">Notification message</span>
+    </div>
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md text-white shadow-lg border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20 gap-4">
+                
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="resetFilters()">
+                    <div class="w-10 h-10 bg-brand-red rounded-lg flex items-center justify-center font-bold text-xl shadow-lg shadow-red-500/30">
+                        <i class="fas fa-layer-group text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-black tracking-tight text-white leading-none">
+                            postery<span class="text-brand-red">_studio</span>
+                        </h1>
+                        <p class="text-xs text-slate-400 font-medium tracking-wide">CUSTOM POSTERS & PRINTS</p>
+                    </div>
+                </div>
+
+                <!-- Live Search Bar -->
+                <div class="hidden md:flex flex-1 max-w-md mx-6">
+                    <div class="relative w-full">
+                        <i class="fas fa-search absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="Search aesthetic, anime, vintage posters..." 
+                               class="w-full bg-slate-800 text-white pl-10 pr-4 py-2 rounded-full text-sm border border-slate-700 focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition">
+                    </div>
+                </div>
+
+                <!-- Header Actions -->
+                <div class="flex items-center space-x-3">
+                    <button onclick="openCustomRequestModal()" class="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-red-600 to-brand-red hover:from-red-500 hover:to-red-600 text-white font-medium text-xs sm:text-sm px-4 py-2.5 rounded-full shadow-md hover:shadow-lg transition">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                        <span>Custom Order</span>
+                    </button>
+                    
+                    <button id="owner-login-btn" onclick="openLoginModal()" class="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-2 rounded-full text-xs font-semibold border border-slate-700 transition">
+                        <i class="fas fa-user-shield text-brand-red"></i>
+                        <span id="owner-btn-text">Owner Login</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Search Bar -->
+            <div class="md:hidden pb-4">
+                <div class="relative w-full">
+                    <i class="fas fa-search absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="mobile-search-input" onkeyup="handleMobileSearch()" placeholder="Search posters..." 
+                           class="w-full bg-slate-800 text-white pl-10 pr-4 py-2 rounded-full text-sm border border-slate-700 focus:outline-none focus:border-brand-red">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- OWNER DASHBOARD BAR (Only shown when logged in) -->
+    <div id="owner-dashboard-bar" class="hidden bg-amber-50 border-b border-amber-200 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-2 text-amber-900 font-bold text-sm">
+                <span class="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                <i class="fas fa-user-lock"></i>
+                <span>Owner Dashboard active</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="openProductModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                    <i class="fas fa-plus"></i>
+                    <span>Add New Poster</span>
+                </button>
+                <button onclick="openSettingsModal()" class="bg-slate-700 hover:bg-slate-800 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                    <i class="fas fa-cog"></i>
+                    <span>WhatsApp Number</span>
+                </button>
+                <button onclick="confirmResetDefaults()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                    <i class="fas fa-rotate-left mr-1"></i> Reset Samples
+                </button>
+                <button onclick="logoutOwner()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN HERO SECTION -->
+    <section class="bg-gradient-to-b from-slate-900 to-slate-800 text-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#e63946_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-7xl mx-auto relative z-10 text-center">
+            <span class="inline-block px-3 py-1 bg-brand-red/20 text-brand-red border border-brand-red/30 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
+                Starting at just ₹15 / Print
+            </span>
+            <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
+                Transform Your Space With High-Quality Wall Art
+            </h2>
+            <p class="max-w-2xl mx-auto text-slate-300 text-sm sm:text-base mb-6 leading-relaxed">
+                Premium 180 GSM Glossy & Matte Photo Prints. Choose from hundreds of curated aesthetics or send us your custom image directly via WhatsApp!
+            </p>
+            <div class="flex flex-wrap justify-center gap-3">
+                <button onclick="scrollToProducts()" class="bg-brand-red hover:bg-brand-redHover text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg shadow-red-600/30 transition transform hover:-translate-y-0.5">
+                    Explore Collection <i class="fas fa-arrow-down ml-2"></i>
+                </button>
+                <button onclick="openCustomRequestModal()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-6 py-3 rounded-xl font-bold text-sm transition">
+                    Upload Custom Design <i class="fas fa-upload ml-2 text-brand-red"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTENT CONTAINER -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- CATEGORY FILTERS & HEADER BAR -->
+        <div id="catalog-section" class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h3 class="text-2xl font-bold text-slate-900 tracking-tight">Available Posters</h3>
+                <p class="text-slate-500 text-xs sm:text-sm">Select standard size (A4, A3) and quantity before ordering directly on WhatsApp.</p>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="flex flex-wrap gap-2" id="category-pills">
+                <!-- Javascript populates category buttons -->
+            </div>
+        </div>
+
+        <!-- PRODUCTS GRID -->
+        <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Product Cards render here -->
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 my-6">
+            <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fas fa-search-minus"></i>
+            </div>
+            <h4 class="text-lg font-bold text-slate-800 mb-1">No Posters Found</h4>
+            <p class="text-slate-500 text-sm mb-4">Try clearing your search query or selecting a different category filter.</p>
+            <button onclick="resetFilters()" class="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-slate-800 transition">
+                Reset All Filters
+            </button>
+        </div>
+
+        <!-- CUSTOM REQUEST BANNER -->
+        <section class="mt-16 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 sm:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden border border-slate-700">
+            <div class="space-y-2 text-center md:text-left z-10">
+                <span class="bg-red-500/20 text-red-400 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">Have your own image?</span>
+                <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Want a Custom Printed Poster?</h3>
+                <p class="text-slate-300 text-sm max-w-xl">Send us your high-resolution photos, favorite movie stills, or original digital art. We'll print it in high quality!</p>
+            </div>
+            <button onclick="openCustomRequestModal()" class="z-10 bg-brand-red hover:bg-brand-redHover text-white px-7 py-3.5 rounded-xl font-extrabold text-sm shadow-lg shadow-red-600/40 transition whitespace-nowrap">
+                <i class="fas fa-paper-plane mr-2"></i> Request Custom Print
+            </button>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 text-sm py-10 border-t border-slate-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-2">
+                <div class="w-7 h-7 bg-brand-red rounded flex items-center justify-center font-bold text-white text-xs">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <span class="font-bold text-white">postery_studio</span>
+                <span>&copy; 2026. All rights reserved.</span>
+            </div>
+            <div class="flex items-center space-x-6 text-xs">
+                <span class="hover:text-white cursor-pointer transition" onclick="openCustomRequestModal()">Custom Printing</span>
+                <span class="hover:text-white cursor-pointer transition" onclick="scrollToProducts()">Catalogue</span>
+                <span class="hover:text-white cursor-pointer text-slate-400 hover:text-brand-red transition" onclick="openLoginModal()">
+                    <i class="fas fa-lock text-xs mr-1"></i> Owner Portal
+                </span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL: QUICK VIEW -->
+    <div id="quickview-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl border border-slate-200 transform transition-all duration-300 scale-95 opacity-0" id="quickview-card">
+            <div class="flex flex-col md:flex-row">
+                <!-- Image Section -->
+                <div class="w-full md:w-1/2 bg-slate-100 flex items-center justify-center p-4 min-h-[280px]">
+                    <img id="qv-img" src="" alt="Poster View" class="max-h-[380px] w-auto object-contain rounded shadow-lg">
+                </div>
+                <!-- Details Section -->
+                <div class="w-full md:w-1/2 p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span id="qv-category" class="bg-red-50 text-brand-red font-bold text-xs px-2.5 py-0.5 rounded-full uppercase">Category</span>
+                            <button onclick="closeQuickViewModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <h3 id="qv-title" class="text-xl font-bold text-slate-900 mb-2">Poster Name</h3>
+                        <p id="qv-desc" class="text-slate-600 text-xs mb-4 leading-relaxed">Paper Type Description</p>
+                        
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 mb-4 space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Select Size:</label>
+                                <div class="grid grid-cols-3 gap-2" id="qv-size-selector">
+                                    <button type="button" onclick="setQVSize('A4', 0)" class="qv-size-btn border border-brand-red bg-red-50 text-brand-red font-bold text-xs py-1.5 rounded-lg text-center">A4 (Standard)</button>
+                                    <button type="button" onclick="setQVSize('A3', 15)" class="qv-size-btn border border-slate-200 text-slate-600 font-bold text-xs py-1.5 rounded-lg text-center">+₹15 (A3 Large)</button>
+                                    <button type="button" onclick="setQVSize('A2', 35)" class="qv-size-btn border border-slate-200 text-slate-600 font-bold text-xs py-1.5 rounded-lg text-center">+₹35 (A2 Poster)</button>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs font-bold text-slate-700">Quantity:</label>
+                                <div class="flex items-center border border-slate-300 rounded-lg bg-white">
+                                    <button onclick="updateQVQty(-1)" class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 text-xs font-bold rounded-l-lg">-</button>
+                                    <span id="qv-qty" class="px-3 text-xs font-bold text-slate-800">1</span>
+                                    <button onclick="updateQVQty(1)" class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 text-xs font-bold rounded-r-lg">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-baseline justify-between mb-4">
+                            <span class="text-xs text-slate-500 font-medium">Calculated Total:</span>
+                            <span id="qv-price" class="text-2xl font-black text-slate-900">₹0</span>
+                        </div>
+                        <button id="qv-whatsapp-btn" onclick="sendQVWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm">
+                            <i class="fab fa-whatsapp text-lg"></i>
+                            <span>Order on WhatsApp Now</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CUSTOM ORDER REQUEST -->
+    <div id="custom-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 relative">
+            <button onclick="closeCustomRequestModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="w-10 h-10 bg-red-100 text-brand-red rounded-xl flex items-center justify-center text-lg font-bold">
+                    <i class="fas fa-paint-brush"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Custom Poster Request</h3>
+                    <p class="text-xs text-slate-500">Describe what you want to print!</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Poster Topic / Design Title *</label>
+                    <input type="text" id="cust-title" placeholder="e.g., Attack on Titan Eren Yeager Wallpaper" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-brand-red focus:border-brand-red">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Preferred Size</label>
+                    <select id="cust-size" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white">
+                        <option value="A4 (Standard - 8.3 x 11.7 in)">A4 Standard Paper</option>
+                        <option value="A3 (Large - 11.7 x 16.5 in)">A3 Large Paper</option>
+                        <option value="A2 (Poster Size - 16.5 x 23.4 in)">A2 Poster Size</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Paper Finish</label>
+                    <select id="cust-finish" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white">
+                        <option value="180 GSM Glossy Photo Paper">180 GSM Glossy Photo Paper</option>
+                        <option value="180 GSM Matte Finish Photo Paper">180 GSM Matte Finish Photo Paper</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Custom Notes / Image Link (Optional)</label>
+                    <textarea id="cust-notes" rows="3" placeholder="Paste Pinterest/Google link or details. You can also send the image in WhatsApp chat!" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-brand-red"></textarea>
+                </div>
+
+                <button onclick="sendCustomWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm mt-2">
+                    <i class="fab fa-whatsapp text-lg"></i>
+                    <span>Send Custom Order to WhatsApp</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: OWNER LOGIN -->
+    <div id="login-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 relative text-center">
+            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <div class="w-12 h-12 bg-slate-100 text-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Owner Authentication</h3>
+            <p class="text-xs text-slate-500 mb-4">Enter passcode to manage store catalogue & WhatsApp number.</p>
+            
+            <input type="password" id="login-passcode" placeholder="Enter owner passcode" 
+                   onkeydown="if(event.key === 'Enter') submitLogin()"
+                   class="w-full border border-slate-300 rounded-xl p-3 text-center text-sm font-mono tracking-widest focus:ring-2 focus:ring-brand-red focus:border-brand-red mb-3">
+            
+            <button onclick="submitLogin()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl transition text-sm">
+                Unlock Dashboard
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT PRODUCT (ADMIN) -->
+    <div id="product-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 relative">
+            <button onclick="closeProductModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <h3 id="product-modal-title" class="text-lg font-bold text-slate-900 mb-4">Add New Poster</h3>
+
+            <input type="hidden" id="edit-id">
+            <div class="space-y-3.5 text-sm">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Poster Title *</label>
+                    <input type="text" id="prod-name" placeholder="e.g., Cyberpunk City Neon Wall Art" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-brand-red">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Base Price (A4 in ₹) *</label>
+                        <input type="number" id="prod-price" placeholder="25" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-brand-red">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                        <select id="prod-category" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white">
+                            <option value="Aesthetic">Aesthetic</option>
+                            <option value="Vintage">Vintage</option>
+                            <option value="Anime">Anime</option>
+                            <option value="Quotes">Quotes</option>
+                            <option value="Custom">Custom</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Paper Type / Description *</label>
+                    <input type="text" id="prod-desc" placeholder="e.g., 180 GSM Glossy Photo Print" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-brand-red">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Image URL (Optional)</label>
+                    <input type="text" id="prod-img" placeholder="https://images.unsplash.com/..." class="w-full border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-1 focus:ring-brand-red">
+                    <p class="text-[10px] text-slate-400 mt-1">Leave blank to use clean default placeholder SVG.</p>
+                </div>
+
+                <div class="flex items-center space-x-2 pt-2">
+                    <button onclick="saveProduct()" id="save-btn" class="flex-1 bg-brand-red hover:bg-brand-redHover text-white font-bold py-2.5 rounded-xl transition text-xs">
+                        Save Poster
+                    </button>
+                    <button onclick="closeProductModal()" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl transition text-xs">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SETTINGS (WHATSAPP CONFIG) -->
+    <div id="settings-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 relative">
+            <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">WhatsApp Configuration</h3>
+            <p class="text-xs text-slate-500 mb-4">Set the WhatsApp phone number that customers will send poster orders to.</p>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp Number (with Country Code)</label>
+                    <input type="text" id="setting-whatsapp" placeholder="910000000000" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs font-mono">
+                    <p class="text-[10px] text-slate-400 mt-1">Include country code without '+' (e.g., 919876543210 for India).</p>
+                </div>
+
+                <button onclick="saveSettings()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl transition text-xs mt-2">
+                    Save WhatsApp Number
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRMATION DIALOG (Replaces window.confirm) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-center">
+            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 id="confirm-title" class="text-lg font-bold text-slate-900 mb-1">Are you sure?</h3>
+            <p id="confirm-msg" class="text-xs text-slate-500 mb-5">This action cannot be undone.</p>
+
+            <div class="flex items-center space-x-2">
+                <button id="confirm-yes-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition">
+                    Yes, Proceed
+                </button>
+                <button onclick="closeConfirmModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // CORE CONSTANTS & SETTINGS
+        const OWNER_PASSCODE = "posteryfathima26";
+        const DEFAULT_WHATSAPP = "919942275036";
+
+        // Clean inline SVG placeholder data URI for broken/empty images
+        const SVG_PLACEHOLDER = "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%22500%22%20viewBox%3D%220%200%20400%20500%22%3E%3Crect%20fill%3D%22%23f1f5f9%22%20width%3D%22400%22%20height%3D%22500%22%2F%3E%3Crect%20x%3D%2220%22%20y%3D%2220%22%20width%3D%22360%22%20height%3D%22460%22%20fill%3D%22none%22%20stroke%3D%22%23cbd5e1%22%20stroke-width%3D%224%22%20stroke-dasharray%3D%228%208%22%2F%3E%3Cpath%20d%3D%22M160%20210%20L200%20170%20L240%20210%20M170%20250%20L230%20250%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2260%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20font-weight%3D%22bold%22%20font-size%3D%2220%22%20fill%3D%22%2364748b%22%3Epostery_studio%3C%2Ftext%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2266%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20font-family%3D%22sans-serif%22%20font-size%3D%2214%22%20fill%3D%22%2394a3b8%22%3EHigh%20Quality%20Print%3C%2Ftext%3E%3C%2Fsvg%3E";
+
+        // Default Sample Products Catalog
+        const defaultProducts = [
+            {
+                id: 1,
+                name: "Minimalist Aesthetic Line Art",
+                price: 20,
+                category: "Aesthetic",
+                desc: "180 GSM High-Quality Matte Print",
+                img: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 2,
+                name: "Vintage Classic Porsche Poster",
+                price: 25,
+                category: "Vintage",
+                desc: "180 GSM Glossy Photo Paper",
+                img: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 3,
+                name: "Motivational Hustle Quote Wall Art",
+                price: 15,
+                category: "Quotes",
+                desc: "180 GSM Premium Photo Print",
+                img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 4,
+                name: "Cyberpunk Tokyo City Nights",
+                price: 30,
+                category: "Anime",
+                desc: "180 GSM High-Contrast Glossy Print",
+                img: "https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 5,
+                name: "Botanical Plant Line Canvas Print",
+                price: 22,
+                category: "Aesthetic",
+                desc: "180 GSM Smooth Matte Paper",
+                img: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=600&q=80"
+            },
+            {
+                id: 6,
+                name: "Retro Vinyl Records Wall Art",
+                price: 25,
+                category: "Vintage",
+                desc: "180 GSM Heavy Glossy Finish",
+                img: "https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=600&q=80"
+            }
+        ];
+
+        // APP STATE
+        let isOwner = false;
+        let activeCategory = "All";
+        let searchQuery = "";
+        let selectedProductForQV = null;
+        let qvSizeExtra = 0;
+        let qvSizeName = "A4";
+        let qvQty = 1;
+
+        // Load Products & WhatsApp Settings from LocalStorage
+        let products = JSON.parse(localStorage.getItem('postery_products')) || defaultProducts;
+        let whatsappNumber = localStorage.getItem('postery_whatsapp') || DEFAULT_WHATSAPP;
+
+        // INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCategoryPills();
+            renderProducts();
+        });
+
+        // TOAST NOTIFICATION UTILITY
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+
+            if (type === 'error') {
+                toastIcon.className = "fas fa-exclamation-circle text-red-400 text-lg";
+            } else if (type === 'info') {
+                toastIcon.className = "fas fa-info-circle text-sky-400 text-lg";
+            } else {
+                toastIcon.className = "fas fa-check-circle text-emerald-400 text-lg";
+            }
+
+            toast.classList.remove('translate-y-[-100px]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-100px]', 'opacity-0');
+            }, 3000);
+        }
+
+        // CONFIRM MODAL DIALOG UTILITY (replaces alert/confirm)
+        function triggerConfirm(title, message, onConfirmCallback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-msg').innerText = message;
+            
+            const yesBtn = document.getElementById('confirm-yes-btn');
+            yesBtn.onclick = () => {
+                closeConfirmModal();
+                onConfirmCallback();
+            };
+
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+
+        // CATEGORIES & SEARCH LOGIC
+        const categories = ["All", "Aesthetic", "Vintage", "Anime", "Quotes", "Custom"];
+
+        function renderCategoryPills() {
+            const container = document.getElementById('category-pills');
+            container.innerHTML = '';
+
+            categories.forEach(cat => {
+                const isActive = activeCategory === cat;
+                const activeClasses = isActive 
+                    ? "bg-brand-red text-white shadow-md shadow-red-500/30" 
+                    : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200";
+
+                const pill = document.createElement('button');
+                pill.className = `px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${activeClasses}`;
+                pill.innerText = cat;
+                pill.onclick = () => {
+                    activeCategory = cat;
+                    renderCategoryPills();
+                    renderProducts();
+                };
+                container.appendChild(pill);
+            });
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+            renderProducts();
+        }
+
+        function handleMobileSearch() {
+            searchQuery = document.getElementById('mobile-search-input').value.toLowerCase().trim();
+            renderProducts();
+        }
+
+        function resetFilters() {
+            activeCategory = "All";
+            searchQuery = "";
+            document.getElementById('search-input').value = "";
+            document.getElementById('mobile-search-input').value = "";
+            renderCategoryPills();
+            renderProducts();
+        }
+
+        function scrollToProducts() {
+            document.getElementById('catalog-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // RENDER PRODUCT CATALOG GRID
+        function renderProducts() {
+            const container = document.getElementById('products-container');
+            const emptyState = document.getElementById('empty-state');
+            container.innerHTML = '';
+
+            const filtered = products.filter(prod => {
+                const matchesCategory = (activeCategory === "All") || (prod.category === activeCategory);
+                const matchesSearch = prod.name.toLowerCase().includes(searchQuery) || 
+                                      prod.desc.toLowerCase().includes(searchQuery) ||
+                                      (prod.category && prod.category.toLowerCase().includes(searchQuery));
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filtered.forEach(prod => {
+                const imgSrc = prod.img && prod.img.trim() !== '' ? prod.img : SVG_PLACEHOLDER;
+                const catBadge = prod.category || 'Standard';
+
+                let adminActions = '';
+                if (isOwner) {
+                    adminActions = `
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                            <button onclick="editProduct(${prod.id})" class="bg-sky-50 hover:bg-sky-100 text-sky-700 px-3 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                                <i class="fas fa-edit"></i> <span>Edit</span>
+                            </button>
+                            <button onclick="confirmDeleteProduct(${prod.id})" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                                <i class="fas fa-trash-alt"></i> <span>Delete</span>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                const cardHtml = `
+                    <div class="poster-card bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-slate-200/80 flex flex-col justify-between">
+                        <div>
+                            <!-- Image Header -->
+                            <div class="poster-img-container bg-slate-100 h-64 w-full relative cursor-pointer" onclick="openQuickView(${prod.id})">
+                                <img src="${imgSrc}" alt="${prod.name}" onerror="this.onerror=null; this.src='${SVG_PLACEHOLDER}';" class="w-full h-full object-cover">
+                                <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
+                                    ${catBadge}
+                                </span>
+                                <div class="absolute inset-0 bg-slate-950/20 opacity-0 hover:opacity-100 transition flex items-center justify-center">
+                                    <span class="bg-white/90 text-slate-900 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center space-x-1">
+                                        <i class="fas fa-eye text-brand-red"></i> <span>Quick View</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="p-4">
+                                <h4 class="font-bold text-slate-900 text-base mb-1 line-clamp-1">${prod.name}</h4>
+                                <p class="text-slate-500 text-xs mb-3 line-clamp-1">${prod.desc}</p>
+
+                                <div class="flex items-center justify-between mb-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                                    <div>
+                                        <span class="text-[10px] text-slate-400 font-bold block uppercase">Base Price</span>
+                                        <span class="text-lg font-black text-brand-red">₹${prod.price}</span>
+                                    </div>
+                                    <button onclick="openQuickView(${prod.id})" class="text-xs text-slate-600 hover:text-slate-900 font-semibold flex items-center space-x-1">
+                                        <span>Sizes (A4/A3)</span> <i class="fas fa-chevron-right text-[10px]"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="px-4 pb-4 space-y-2">
+                            <button onclick="directOrderWhatsApp(${prod.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-xs">
+                                <i class="fab fa-whatsapp text-sm"></i>
+                                <span>Order on WhatsApp</span>
+                            </button>
+                            ${adminActions}
+                        </div>
+                    </div>
+                `;
+
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
+
+        // WHATSAPP LINK GENERATOR
+        function directOrderWhatsApp(id) {
+            const prod = products.find(p => p.id === id);
+            if (!prod) return;
+
+            const message = `Hi postery_studio! 👋\nI would like to order this poster:\n\n📌 *Poster:* ${prod.name}\n📄 *Paper:* ${prod.desc}\n📐 *Size:* A4 Standard\n💰 *Price:* ₹${prod.price}\n\nPlease confirm availability & payment details!`;
+            const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        // QUICK VIEW MODAL LOGIC
+        function openQuickView(id) {
+            const prod = products.find(p => p.id === id);
+            if (!prod) return;
+
+            selectedProductForQV = prod;
+            qvSizeExtra = 0;
+            qvSizeName = "A4";
+            qvQty = 1;
+
+            document.getElementById('qv-title').innerText = prod.name;
+            document.getElementById('qv-desc').innerText = prod.desc;
+            document.getElementById('qv-category').innerText = prod.category || 'Standard';
+            document.getElementById('qv-img').src = prod.img || SVG_PLACEHOLDER;
+            document.getElementById('qv-img').onerror = function() { this.src = SVG_PLACEHOLDER; };
+
+            updateQVPrice();
+            resetQVSizeButtons();
+
+            const modal = document.getElementById('quickview-modal');
+            const card = document.getElementById('quickview-card');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                card.classList.remove('scale-95', 'opacity-0');
+                card.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeQuickViewModal() {
+            const modal = document.getElementById('quickview-modal');
+            const card = document.getElementById('quickview-card');
+            card.classList.remove('scale-100', 'opacity-100');
+            card.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function setQVSize(sizeName, extraPrice) {
+            qvSizeName = sizeName;
+            qvSizeExtra = extraPrice;
+
+            const buttons = document.querySelectorAll('.qv-size-btn');
+            buttons.forEach(btn => {
+                btn.className = "qv-size-btn border border-slate-200 text-slate-600 font-bold text-xs py-1.5 rounded-lg text-center";
+            });
+
+            event.currentTarget.className = "qv-size-btn border border-brand-red bg-red-50 text-brand-red font-bold text-xs py-1.5 rounded-lg text-center";
+            updateQVPrice();
+        }
+
+        function resetQVSizeButtons() {
+            const buttons = document.querySelectorAll('.qv-size-btn');
+            if (buttons.length > 0) {
+                buttons[0].className = "qv-size-btn border border-brand-red bg-red-50 text-brand-red font-bold text-xs py-1.5 rounded-lg text-center";
+                buttons[1].className = "qv-size-btn border border-slate-200 text-slate-600 font-bold text-xs py-1.5 rounded-lg text-center";
+                buttons[2].className = "qv-size-btn border border-slate-200 text-slate-600 font-bold text-xs py-1.5 rounded-lg text-center";
+            }
+        }
+
+        function updateQVQty(change) {
+            qvQty = Math.max(1, qvQty + change);
+            document.getElementById('qv-qty').innerText = qvQty;
+            updateQVPrice();
+        }
+
+        function updateQVPrice() {
+            if (!selectedProductForQV) return;
+            const unitPrice = selectedProductForQV.price + qvSizeExtra;
+            const totalPrice = unitPrice * qvQty;
+            document.getElementById('qv-price').innerText = `₹${totalPrice}`;
+        }
+
+        function sendQVWhatsApp() {
+            if (!selectedProductForQV) return;
+            const unitPrice = selectedProductForQV.price + qvSizeExtra;
+            const totalPrice = unitPrice * qvQty;
+
+            const message = `Hi postery_studio! 👋\nI want to place an order from Quick View:\n\n🖼️ *Poster:* ${selectedProductForQV.name}\n📐 *Size:* ${qvSizeName}\n🔢 *Quantity:* ${qvQty}\n📄 *Paper:* ${selectedProductForQV.desc}\n💰 *Total Price:* ₹${totalPrice}\n\nPlease help me complete this order!`;
+
+            const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank');
+            closeQuickViewModal();
+        }
+
+        // CUSTOM POSTER REQUEST MODAL LOGIC
+        function openCustomRequestModal() {
+            document.getElementById('cust-title').value = '';
+            document.getElementById('cust-notes').value = '';
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+
+        function closeCustomRequestModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
+        function sendCustomWhatsApp() {
+            const title = document.getElementById('cust-title').value.trim();
+            const size = document.getElementById('cust-size').value;
+            const finish = document.getElementById('cust-finish').value;
+            const notes = document.getElementById('cust-notes').value.trim();
+
+            if (!title) {
+                showToast("Please enter a Poster Title or Idea description!", "error");
+                return;
+            }
+
+            let msg = `Hi postery_studio! 🎨\nI have a *Custom Poster Printing Request*:\n\n✨ *Design Idea:* ${title}\n📐 *Size:* ${size}\n📜 *Paper Finish:* ${finish}`;
+            if (notes) {
+                msg += `\n📝 *Notes/Link:* ${notes}`;
+            }
+            msg += `\n\nI will send the image file in this chat!`;
+
+            const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
+            window.open(waUrl, '_blank');
+            closeCustomRequestModal();
+            showToast("Opening WhatsApp with your request...", "info");
+        }
+
+        // OWNER AUTHENTICATION LOGIC
+        function openLoginModal() {
+            if (isOwner) {
+                logoutOwner();
+                return;
+            }
+            document.getElementById('login-passcode').value = '';
+            document.getElementById('login-modal').classList.remove('hidden');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+        }
+
+        function submitLogin() {
+            const inputPass = document.getElementById('login-passcode').value.trim();
+            if (inputPass === OWNER_PASSCODE) {
+                isOwner = true;
+                closeLoginModal();
+                document.getElementById('owner-dashboard-bar').classList.remove('hidden');
+                document.getElementById('owner-btn-text').innerText = "Logout Admin";
+                renderProducts();
+                showToast("Owner Dashboard unlocked successfully!");
+            } else {
+                showToast("Incorrect passcode! Access Denied.", "error");
+            }
+        }
+
+        function logoutOwner() {
+            isOwner = false;
+            document.getElementById('owner-dashboard-bar').classList.add('hidden');
+            document.getElementById('owner-btn-text').innerText = "Owner Login";
+            renderProducts();
+            showToast("Owner logged out.", "info");
+        }
+
+        // ADMIN PRODUCT MANAGEMENT (ADD / EDIT / DELETE)
+        function openProductModal() {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('prod-name').value = '';
+            document.getElementById('prod-price').value = '';
+            document.getElementById('prod-category').value = 'Aesthetic';
+            document.getElementById('prod-desc').value = '180 GSM Glossy Photo Paper';
+            document.getElementById('prod-img').value = '';
+            document.getElementById('product-modal-title').innerText = "Add New Poster";
+            document.getElementById('save-btn').innerText = "Add Poster";
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+        }
+
+        function editProduct(id) {
+            const prod = products.find(p => p.id === id);
+            if (!prod) return;
+
+            document.getElementById('edit-id').value = prod.id;
+            document.getElementById('prod-name').value = prod.name;
+            document.getElementById('prod-price').value = prod.price;
+            document.getElementById('prod-category').value = prod.category || 'Aesthetic';
+            document.getElementById('prod-desc').value = prod.desc;
+            document.getElementById('prod-img').value = prod.img || '';
+            document.getElementById('product-modal-title').innerText = "Edit Poster";
+            document.getElementById('save-btn').innerText = "Update Poster";
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function saveProduct() {
+            const editId = document.getElementById('edit-id').value;
+            const name = document.getElementById('prod-name').value.trim();
+            const price = parseFloat(document.getElementById('prod-price').value);
+            const category = document.getElementById('prod-category').value;
+            const desc = document.getElementById('prod-desc').value.trim();
+            const img = document.getElementById('prod-img').value.trim();
+
+            if (!name || isNaN(price) || !desc) {
+                showToast("Please fill in Poster Name, Price, and Description!", "error");
+                return;
+            }
+
+            if (editId) {
+                // Update existing poster
+                const index = products.findIndex(p => p.id == editId);
+                if (index !== -1) {
+                    products[index] = {
+                        id: Number(editId),
+                        name,
+                        price,
+                        category,
+                        desc,
+                        img
+                    };
+                    showToast("Poster updated successfully!");
+                }
+            } else {
+                // Create new poster
+                const newProd = {
+                    id: Date.now(),
+                    name,
+                    price,
+                    category,
+                    desc,
+                    img
+                };
+                products.push(newProd);
+                showToast("New poster added to catalogue!");
+            }
+
+            localStorage.setItem('postery_products', JSON.stringify(products));
+            closeProductModal();
+            renderProducts();
+        }
+
+        function confirmDeleteProduct(id) {
+            triggerConfirm("Delete Poster", "Are you sure you want to remove this poster from your shop?", () => {
+                products = products.filter(p => p.id !== id);
+                localStorage.setItem('postery_products', JSON.stringify(products));
+                renderProducts();
+                showToast("Poster deleted successfully.");
+            });
+        }
+
+        function confirmResetDefaults() {
+            triggerConfirm("Reset Sample Catalog", "This will replace current posters with default sample posters. Continue?", () => {
+                products = [...defaultProducts];
+                localStorage.setItem('postery_products', JSON.stringify(products));
+                renderProducts();
+                showToast("Catalog reset to defaults.");
+            });
+        }
+
+        // ADMIN SETTINGS (WHATSAPP CONFIG)
+        function openSettingsModal() {
+            document.getElementById('setting-whatsapp').value = whatsappNumber;
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            const num = document.getElementById('setting-whatsapp').value.trim().replace(/[^0-9]/g, '');
+            if (!num || num.length < 8) {
+                showToast("Please enter a valid WhatsApp number with country code!", "error");
+                return;
+            }
+
+            whatsappNumber = num;
+            localStorage.setItem('postery_whatsapp', whatsappNumber);
+            closeSettingsModal();
+            showToast("WhatsApp phone number updated successfully!");
+        }
+    </script>
+</body>
+</html>
